@@ -1,0 +1,41 @@
+version: '2.3'
+
+services:
+  jupyter:
+    container_name: jupyter_cluster
+    build: jupyter_notebook/.
+    ports:
+     - "8888:8888"
+    environment:
+      - MASTER_NODE=10.10.8.2
+    networks:
+      vpc_python:
+        ipv4_address: 10.10.8.2
+    volumes:
+      - data-engine:/home/jovyan:rw
+      - data-jupyter:/home/jovyan/work:rw
+
+
+  python_slave:
+    build: python_slave/.
+    environment:
+      - MASTER_NODE=10.10.8.2
+    scale: 4
+    networks:
+     - vpc_python
+    depends_on:
+     - jupyter
+    volumes:
+      - data-engine:/root/:rw
+
+volumes:
+  data-jupyter:
+  data-engine:
+
+networks:
+  vpc_python:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.10.8.0/24
+         gateway: 10.10.8.1
